@@ -24,6 +24,7 @@ jobs:
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
+            -e "ssh -T -o LogLevel=QUIET" \
             --exclude ".git" \
             --exclude ".github" \
             --exclude "README.md" \
