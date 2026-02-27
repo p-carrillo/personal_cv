@@ -109,9 +109,13 @@
             // initializing page transition.
             var ptPage = $('.subpages');
             if (ptPage[0]) {
-                PageTransitions.init({
-                    menu: 'ul.site-main-menu',
-                });
+                if (typeof PageTransitions !== 'undefined' && PageTransitions.init) {
+                    PageTransitions.init({
+                        menu: 'ul.site-main-menu',
+                    });
+                } else {
+                    console.warn('[PageTransitions] library not loaded yet or unavailable. Skipping init.');
+                }
             }
             customScroll();
         })
@@ -122,7 +126,7 @@
 
 
     // On Document Load
-    $(document).on('ready', function() {
+    $(document).ready(function() {
         // Initialize Portfolio grid
         var $portfolio_container = $("#portfolio-grid");
 

@@ -20,4 +20,3 @@ This site is designed to visually and directly showcase my professional profile,
 Thank you for your visit.
 
 [pablocarrillo.net](https://pablocarrillo.net/)
-
