@@ -1343,6 +1343,63 @@ ul.social-links li:last-child a {
 /* Skills */
 
 
+/* Repos */
+.repos-status {
+  margin: 0 0 15px;
+  color: #666;
+}
+
+.repos-list {
+  margin-top: 0;
+}
+
+.repo-card {
+  border: 1px solid #e5e5e5;
+  background-color: #fcfcfc;
+  padding: 18px 16px;
+  min-height: 170px;
+}
+
+.repo-card-title {
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.repo-card-title a {
+  word-break: break-word;
+}
+
+.repo-web-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d5d5d5;
+  color: #33393FFF;
+  flex-shrink: 0;
+}
+
+.repo-web-link:hover {
+  color: #fff;
+  background-color: #33393FFF;
+  border-color: #33393FFF;
+}
+
+.repo-card-description {
+  min-height: 60px;
+}
+
+.repo-card-meta {
+  color: #888;
+  margin: 0;
+  font-size: 12px;
+}
+/* /Repos */
+
+
 /* =======================================
 7.4. Portfolio subpage
 ======================================= */

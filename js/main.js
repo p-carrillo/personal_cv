@@ -37,6 +37,214 @@
     }
     // /Portfolio subpage filters
 
+    function normalizeUrl(url) {
+        if (!url) {
+            return '';
+        }
+
+        var trimmedUrl = $.trim(url);
+        if (!trimmedUrl) {
+            return '';
+        }
+
+        if (/^https?:\/\//i.test(trimmedUrl)) {
+            return trimmedUrl;
+        }
+
+        return 'https://' + trimmedUrl.replace(/^\/+/, '');
+    }
+
+    function normalizeRepoKey(name) {
+        return (name || '').toLowerCase().replace(/[\s_-]+/g, '');
+    }
+
+    function formatRepoTitle(name) {
+        return (name || '')
+            .split(/[_-]+/)
+            .filter(function(part) { return !!part; })
+            .map(function(part) {
+                var lower = part.toLowerCase();
+                return lower.charAt(0).toUpperCase() + lower.slice(1);
+            })
+            .join(' ');
+    }
+
+    function getPublishedRepoUrl(repo) {
+        var repoKey = normalizeRepoKey(repo.name);
+
+        if (repoKey.indexOf('trillo') !== -1 || repoKey.indexOf('treillo') !== -1) {
+            return 'https://monotask.diteria.net';
+        }
+
+        if (
+            repoKey.indexOf('silicontraveler') !== -1 ||
+            (repoKey.indexOf('silicon') !== -1 && repoKey.indexOf('traveler') !== -1)
+        ) {
+            return 'https://silicontraveler.diteria.net';
+        }
+
+        if (repoKey.indexOf('diteriahome') !== -1 || repoKey.indexOf('diteria') !== -1) {
+            return 'https://diteria.net';
+        }
+
+        var homepageUrl = normalizeUrl(repo.homepage);
+        if (homepageUrl) {
+            return homepageUrl;
+        }
+
+        if (!repo.has_pages || !repo.owner || !repo.owner.login) {
+            return '';
+        }
+
+        if (repo.name.toLowerCase() === (repo.owner.login + '.github.io').toLowerCase()) {
+            return 'https://' + repo.owner.login + '.github.io/';
+        }
+
+        return 'https://' + repo.owner.login + '.github.io/' + repo.name + '/';
+    }
+
+    function buildRepoCard(repo) {
+        var publishedUrl = getPublishedRepoUrl(repo);
+        var description = repo.description || 'No description available.';
+        var language = repo.language || 'N/A';
+        var displayName = formatRepoTitle(repo.name);
+
+        var $col = $('<div>', {
+            'class': 'col-sm-6 col-md-4 subpage-block'
+        });
+        var $card = $('<article>', {
+            'class': 'repo-card'
+        });
+        var $title = $('<h3>', {
+            'class': 'repo-card-title'
+        });
+        var $repoLink = $('<a>', {
+            href: repo.html_url,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            text: displayName
+        });
+
+        $title.append($repoLink);
+
+        if (publishedUrl) {
+            var $webLink = $('<a>', {
+                href: publishedUrl,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'class': 'repo-web-link',
+                title: 'Open published website',
+                'aria-label': 'Open published website for ' + repo.name
+            });
+            $webLink.append($('<i>', { 'class': 'fa fa-globe' }));
+            $title.append($webLink);
+        }
+
+        $card.append($title);
+        $card.append($('<p>', {
+            'class': 'repo-card-description',
+            text: description
+        }));
+        $card.append($('<p>', {
+            'class': 'repo-card-meta',
+            text: language
+        }));
+
+        return $col.append($card);
+    }
+
+    function getCachedRepos(cacheKey, maxAgeMs) {
+        try {
+            var cachedValue = localStorage.getItem(cacheKey);
+            if (!cachedValue) {
+                return null;
+            }
+
+            var parsed = JSON.parse(cachedValue);
+            if (!parsed || !parsed.savedAt || !Array.isArray(parsed.repos)) {
+                return null;
+            }
+
+            if ((Date.now() - parsed.savedAt) > maxAgeMs) {
+                return null;
+            }
+
+            return parsed.repos;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function setCachedRepos(cacheKey, repos) {
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                savedAt: Date.now(),
+                repos: repos
+            }));
+        } catch (error) {
+            // Ignore localStorage errors (private mode/quota/security).
+        }
+    }
+
+    function initGithubRepos() {
+        var githubUser = 'p-carrillo';
+        var apiUrl = 'https://api.github.com/users/' + githubUser + '/repos?per_page=100&sort=updated&direction=desc';
+        var cacheKey = 'github_repos_' + githubUser;
+        var cacheTtlMs = 5 * 60 * 1000;
+        var $reposList = $('#repos-list');
+        var $reposStatus = $('#repos-status');
+
+        if (!$reposList.length || !$reposStatus.length) {
+            return;
+        }
+
+        function renderRepos(repos, fromCache) {
+            var publicRepos = Array.isArray(repos) ? repos
+                .filter(function(repo) {
+                    return repo && !repo.private;
+                })
+                .sort(function(a, b) {
+                    var aDate = new Date(a.pushed_at || a.updated_at || 0).getTime();
+                    var bDate = new Date(b.pushed_at || b.updated_at || 0).getTime();
+                    return bDate - aDate;
+                }) : [];
+
+            $reposList.empty();
+
+            if (!publicRepos.length) {
+                $reposStatus.text('No public repositories to display.');
+                return;
+            }
+
+            publicRepos.forEach(function(repo) {
+                $reposList.append(buildRepoCard(repo));
+            });
+
+            $reposStatus.text(
+                'Showing ' + publicRepos.length + ' public repositories' + (fromCache ? ' (5 min cache).' : '.')
+            );
+            customScroll();
+        }
+
+        var cachedRepos = getCachedRepos(cacheKey, cacheTtlMs);
+        if (cachedRepos) {
+            renderRepos(cachedRepos, true);
+            return;
+        }
+
+        $.ajax({
+            url: apiUrl,
+            method: 'GET',
+            dataType: 'json',
+            timeout: 10000
+        }).done(function(repos) {
+            setCachedRepos(cacheKey, repos);
+            renderRepos(repos, false);
+        }).fail(function() {
+            $reposStatus.text('Could not load GitHub repositories right now.');
+        });
+    }
+
     // Contact form validator
     $(function () {
 
@@ -256,6 +464,8 @@
         $('.tilt-effect').tilt({
 
         });
+
+        initGithubRepos();
 
     });
 
