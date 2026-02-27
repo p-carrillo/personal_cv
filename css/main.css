@@ -1061,6 +1061,29 @@ ul.social-links li:last-child a {
   color: #33393FFF;
   margin: 5px 0 18px;
 }
+
+.skills-services-row .service-block {
+  padding: 0 6px;
+}
+
+.skills-services-row .service-icon {
+  font-size: 42px;
+  margin: 0 0 10px;
+}
+
+.skills-services-row .service-info h4 {
+  font-size: 14px;
+  line-height: 1.15;
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skills-services-row .service-info p {
+  font-size: 13px;
+  line-height: 1.35;
+}
 /* /Services */
 
 /* Clients */
@@ -1273,10 +1296,13 @@ ul.social-links li:last-child a {
 }
 
 .skills-info h4 { 
-  font-size: 0.8em;
+  font-size: 0.75em;
   line-height: 1.1em;
   position: relative; 
   margin: 0 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .skill-container {
@@ -2034,9 +2060,26 @@ ul.social-links li:last-child a {
     font-size: 18px;
   }
 
+  .skills-services-row .service-info h4 {
+    white-space: normal;
+  }
+
   .ajax-page-wrapper {
     padding-left: 20px;
     padding-right: 20px; 
+  }
+}
+
+@media only screen and (min-width: 992px) {
+  .skills-services-row {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .skills-services-row .subpage-block {
+    float: none;
+    width: 20%;
+    margin-bottom: 0;
   }
 }
 
